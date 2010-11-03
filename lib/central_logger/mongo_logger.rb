@@ -74,11 +74,17 @@ module CentralLogger
 
       def configure
         default_capsize = Rails.env.production? ? PRODUCTION_COLLECTION_SIZE : DEFAULT_COLLECTION_SIZE
-        user_config = YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/database.yml'))).result)[Rails.env]['mongo'] || {}
+
+        user_config = if File.exist?(File.join(Rails.root, 'config/central_logger.yml'))
+          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/central_logger.yml'))).result)[Rails.env] || {}
+        elsif File.exist?(File.join(Rails.root, 'config/mongoid.yml'))
+          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/mongoid.yml'))).result)[Rails.env] || {}
+        else
+          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/database.yml'))).result)[Rails.env]['mongo'] || {}
+        end
+
         @application_name = Rails.root.basename.to_s
-
         @mongo_collection_name = "#{Rails.env}_log"
-
         @db_configuration = {
           'host' => 'localhost',
           'port' => 27017,
