@@ -95,6 +95,10 @@ module CentralLogger
         @mongo_connection ||= Mongo::Connection.new(@db_configuration['host'],
                                                     @db_configuration['port'],
                                                     :auto_reconnect => true).db(@db_configuration['database'])
+
+        if @db_configuration['username'] && @db_configuration['password']
+          @mongo_connection.authenticate(@db_configuration['username'], @db_configuration['password'])
+        end
       end
 
       def create_collection
