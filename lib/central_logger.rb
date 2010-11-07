@@ -5,4 +5,3 @@ require 'central_logger/mongo_logger'
 require 'central_logger/filter'
 require 'central_logger/initializer'
 require 'railtie'
-

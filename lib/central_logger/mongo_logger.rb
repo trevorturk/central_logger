@@ -17,8 +17,12 @@ module CentralLogger
       internal_initialize
     rescue => e
       # in case the logger is fouled up use stdout
-      puts "=> !! A connection to mongo could not be established - the logger will function like a normal ActiveSupport::BufferedLogger !!"
-      puts e.message + "\n" + e.backtrace.join("\n")
+      if Rails.env.production?
+        puts "=> !! A connection to mongo could not be established - the logger will function like a normal ActiveSupport::BufferedLogger !!"
+        puts e.message + "\n" + e.backtrace.join("\n")
+      else
+        puts 'Using standard logger'
+      end
     end
 
     def add_metadata(options={})
@@ -75,20 +79,22 @@ module CentralLogger
       def configure
         default_capsize = Rails.env.production? ? PRODUCTION_COLLECTION_SIZE : DEFAULT_COLLECTION_SIZE
 
-        user_config = if File.exist?(File.join(Rails.root, 'config/central_logger.yml'))
-          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/central_logger.yml'))).result)[Rails.env] || {}
-        elsif File.exist?(File.join(Rails.root, 'config/mongoid.yml'))
-          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/mongoid.yml'))).result)[Rails.env] || {}
-        else
-          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/database.yml'))).result)[Rails.env]['mongo'] || {}
-        end
-
         @application_name = Rails.root.basename.to_s
         @mongo_collection_name = "#{Rails.env}_log"
         @db_configuration = {
           'host' => 'localhost',
           'port' => 27017,
           'capsize' => default_capsize}.merge(user_config)
+      end
+
+      def user_config
+        user_config ||= if File.exist?(File.join(Rails.root, 'config/central_logger.yml'))
+          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/central_logger.yml'))).result)[Rails.env] || {}
+        elsif File.exist?(File.join(Rails.root, 'config/mongoid.yml'))
+          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/mongoid.yml'))).result)[Rails.env] || {}
+        else
+          YAML::load(ERB.new(IO.read(File.join(Rails.root, 'config/database.yml'))).result)[Rails.env]['mongo'] || {}
+        end
       end
 
       def connect
