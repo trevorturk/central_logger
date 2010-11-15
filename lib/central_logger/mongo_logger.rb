@@ -120,6 +120,7 @@ module CentralLogger
       end
 
       def insert_log_record(runtime)
+        return if defined?(CENTRAL_LOGGER_IGNORES) && CENTRAL_LOGGER_IGNORES.include?("#{@mongo_record[:controller]}##{@mongo_record[:action]}")
         @mongo_record[:runtime] = (runtime * 1000).ceil
         @mongo_connection[@mongo_collection_name].insert(@mongo_record) rescue nil
       end
