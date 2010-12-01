@@ -126,8 +126,20 @@ module CentralLogger
       end
 
       def insert_log_record(runtime)
+        @mongo_record[:params] = filter_tempfiles(@mongo_record[:params])
         @mongo_record[:runtime] = (runtime * 1000).ceil
         @mongo_connection[@mongo_collection_name].insert(@mongo_record) rescue nil
+      end
+
+      def filter_tempfiles(params)
+        params.inject({}) do |acc, (k, v)|
+          acc[k] = if v.is_a?(Hash)
+            filter_tempfiles(v)
+          else
+            v.is_a?(Tempfile) ? '[Tempfile]' : v
+          end
+          acc
+        end
       end
 
       def level_to_sym(level)
