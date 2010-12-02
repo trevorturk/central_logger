@@ -129,7 +129,7 @@ module CentralLogger
         @mongo_record[:runtime] = (runtime * 1000).ceil
         @mongo_connection[@mongo_collection_name].insert(@mongo_record)
       rescue => e
-        notify_hoptoad(e) if respond_to?(:notify_hoptoad)
+        notify_hoptoad(e) if defined? HoptoadNotifier
       end
 
       def level_to_sym(level)
