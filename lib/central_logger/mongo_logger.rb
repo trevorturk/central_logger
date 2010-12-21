@@ -126,8 +126,20 @@ module CentralLogger
       end
 
       def insert_log_record(runtime)
+        @mongo_record[:params] = filter_params(@mongo_record[:params])
         @mongo_record[:runtime] = (runtime * 1000).ceil
         @mongo_connection[@mongo_collection_name].insert(@mongo_record) rescue nil
+      end
+
+      def filter_params(params)
+        params.inject({}) do |acc, (k, v)|
+          acc[k] = if v.is_a?(Hash)
+            filter_params(v)
+          else
+            v.respond_to?(:is_utf8?) && v.is_utf8? ? v : "[#{v.class}]"
+          end
+          acc
+        end
       end
 
       def level_to_sym(level)
