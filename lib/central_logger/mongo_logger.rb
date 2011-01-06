@@ -136,7 +136,7 @@ module CentralLogger
           acc[k] = if v.is_a?(Hash)
             filter_params(v)
           else
-            v.respond_to?(:is_utf8?) && v.is_utf8? ? v : v.inspect
+            v.respond_to?(:unpack) && v.unpack("U*") ? v : v.inspect
           end
           acc
         end
